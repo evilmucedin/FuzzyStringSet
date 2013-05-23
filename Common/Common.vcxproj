@@ -110,6 +110,7 @@
   <ItemGroup>
     <ClInclude Include="CityHash.h" />
     <ClInclude Include="CityHashConfig.h" />
+    <ClInclude Include="FileIO.h" />
     <ClInclude Include="SetParameters.h" />
     <ClInclude Include="SuperFastHash.h" />
     <ClInclude Include="Timer.h" />

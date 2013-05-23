@@ -9,6 +9,7 @@
 #include "..\Common\Timer.h"
 #include "..\Common\SetParameters.h"
 #include "..\Common\SuperFastHash.h"
+#include "..\Common\FileIO.h"
 
 using namespace std;
 
@@ -26,12 +27,12 @@ int main()
 	hashes.reserve(N);
 	{
 		TTimer tRead("Read");
-		FILE* fIn = fopen("..\\surls", "r");
-		static const size_t BUFFER_LEN = 65536;
-		char buffer[BUFFER_LEN];
+		TLineReader fIn("..\\surls");
 		int iLine = 0;
 		ui64 prevHash = 0;
-		while (fgets(buffer, BUFFER_LEN, fIn))
+		char* buffer;
+		size_t urlLen;
+		while (fIn.NextLine(&buffer, &urlLen))
 		{
 			if (TEST_MODE && (iLine >= 1000000))
 			{
@@ -42,28 +43,13 @@ int main()
 			{
 				printf("%d\n", iLine);
 			}
-			size_t urlLen = strlen(buffer);
-			if (urlLen > 32000)
+			const ui64 hash = CityHash64(buffer, urlLen) & MASK;
+			hashes.push_back(hash);
+			if (prevHash == hash)
 			{
-				fprintf(stderr, "Warning: long URL\n");
+				fprintf(stderr, "Warning: same URL '%llu' '%llu' '%s'\n", prevHash, hash, buffer);			
 			}
-			if (urlLen)
-			{
-				while (urlLen && (buffer[urlLen - 1] == '\n'))
-				{
-					--urlLen;
-				}
-				if (urlLen)
-				{
-					const ui64 hash = CityHash64(buffer, urlLen) & MASK;
-					hashes.push_back(hash);
-					if (prevHash == hash)
-					{
-						fprintf(stderr, "Warning: same URL '%llu' '%llu' '%s'\n", prevHash, hash, buffer);			
-					}
-					prevHash = hash;
-				}
-			}
+			prevHash = hash;
 		}
 		printf("%d lines handled\n", iLine);
 	}

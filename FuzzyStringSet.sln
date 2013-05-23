@@ -8,6 +8,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Indexer", "Indexer\Indexer.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Common", "Common\Common.vcxproj", "{B9CCB4C2-C911-4D39-8A09-8682A127B40E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Checker", "Checker\Checker.vcxproj", "{0E163A38-121A-4A72-9BEB-069541F53ACD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B9CCB4C2-C911-4D39-8A09-8682A127B40E} = {B9CCB4C2-C911-4D39-8A09-8682A127B40E}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -46,6 +51,18 @@ Global
 		{B9CCB4C2-C911-4D39-8A09-8682A127B40E}.Release|Win32.Build.0 = Release|Win32
 		{B9CCB4C2-C911-4D39-8A09-8682A127B40E}.Release|x64.ActiveCfg = Release|Win32
 		{B9CCB4C2-C911-4D39-8A09-8682A127B40E}.Release|x64.Build.0 = Release|Win32
+		{0E163A38-121A-4A72-9BEB-069541F53ACD}.Debug|ARM.ActiveCfg = Debug|Win32
+		{0E163A38-121A-4A72-9BEB-069541F53ACD}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{0E163A38-121A-4A72-9BEB-069541F53ACD}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{0E163A38-121A-4A72-9BEB-069541F53ACD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0E163A38-121A-4A72-9BEB-069541F53ACD}.Debug|Win32.Build.0 = Debug|Win32
+		{0E163A38-121A-4A72-9BEB-069541F53ACD}.Debug|x64.ActiveCfg = Debug|Win32
+		{0E163A38-121A-4A72-9BEB-069541F53ACD}.Release|ARM.ActiveCfg = Release|Win32
+		{0E163A38-121A-4A72-9BEB-069541F53ACD}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{0E163A38-121A-4A72-9BEB-069541F53ACD}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{0E163A38-121A-4A72-9BEB-069541F53ACD}.Release|Win32.ActiveCfg = Release|Win32
+		{0E163A38-121A-4A72-9BEB-069541F53ACD}.Release|Win32.Build.0 = Release|Win32
+		{0E163A38-121A-4A72-9BEB-069541F53ACD}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
