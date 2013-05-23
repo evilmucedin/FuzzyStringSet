@@ -130,5 +130,57 @@ int main()
 		printf("Size3: %d\n", static_cast<int>(sizeEstimation3/1024/1024));
 	}
 
+	{
+		TTimer tStat("Write");
+		FILE* fOut = fopen("bin", "wb");
+		
+		TBucket buckets[NBUCKETS + 1];
+		memset(buckets, 0, sizeof(buckets));
+		fwrite(buckets, sizeof(TBucket), NBUCKETS + 1, fOut);
+		ui32 offset = sizeof(TBucket)*(NBUCKETS + 1);
+
+		size_t iHash = 0;
+		size_t minLen = 1000000;
+		size_t maxLen = 0;
+		for (ui64 i = 0; i < NBUCKETS; ++i)
+		{
+			if (0 == (i % 100))
+			{
+				printf("%d\n", i);
+			}
+			buckets[i].m_Offset = offset;
+
+			const ui64 bucketBegin = (NHASHES / NBUCKETS) * i;
+			ui64 bucketEnd = (NHASHES / NBUCKETS) * (i + 1);
+			ui64 prev = bucketBegin;
+			size_t len = 0;
+			while ( (iHash < hashes.size()) && (hashes[iHash] < bucketEnd) )
+			{
+				ui32 diff = hashes[iHash] - prev;
+				while (diff > 0)
+				{
+					ui32 toWrite = std::min(static_cast<ui32>(diff), static_cast<ui32>((1 << 16) - 1));
+					ui16 toWrite16 = static_cast<ui16>(toWrite);
+					fwrite(&toWrite16, 2, 1, fOut);
+					diff -= toWrite;
+					offset += 2;
+					++len;
+				}
+				prev = hashes[iHash];
+				++iHash;
+			}
+			minLen = min(minLen, len);
+			maxLen = max(maxLen, len);
+		}
+		buckets[NBUCKETS].m_Offset = offset;
+		printf("minLen = %d\n", minLen);
+		printf("maxLen = %d\n", maxLen);
+
+		fseek(fOut, 0, SEEK_SET);
+		fwrite(buckets, sizeof(TBucket), NBUCKETS + 1, fOut);
+
+		fclose(fOut);
+	}
+
 	return 0;
 }
