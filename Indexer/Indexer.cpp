@@ -5,10 +5,8 @@
 #include <algorithm>
 
 #include "..\Common\Types.h"
-#include "..\Common\CityHash.h"
 #include "..\Common\Timer.h"
 #include "..\Common\SetParameters.h"
-#include "..\Common\SuperFastHash.h"
 #include "..\Common\FileIO.h"
 
 using namespace std;
@@ -19,31 +17,48 @@ typedef vector<ui64> THashes;
 // static const bool TEST_MODE = true;
 static const bool TEST_MODE = false;
 
-static const size_t N = 101000000;
+static const size_t N = 110000000;
 
-int main()
+int main(int argc, char* argv[])
 {
+	const char* urlsIn = argv[1];
+	const char* hashOut = argv[2];
+	
 	THashes hashes;
 	hashes.reserve(N);
 	{
 		TTimer tRead("Read");
-		TLineReader fIn("..\\surls");
+		TUrlReader fIn(urlsIn);
 		int iLine = 0;
 		ui64 prevHash = 0;
 		char* buffer;
 		size_t urlLen;
-		while (fIn.NextLine(&buffer, &urlLen))
+		while (fIn.NextUrl(&buffer, &urlLen))
 		{
+			/*
+			for (size_t i = 0; i < urlLen; ++i)
+			{
+				printf("%c", buffer[i]);
+			}
+			printf("\n");
+			*/
+
 			if (TEST_MODE && (iLine >= 1000000))
 			{
 				break;
 			}
 			++iLine;
-			if ((iLine % 100000) == 0)
+			if ((iLine % 1000000) == 0)
 			{
 				printf("%d\n", iLine);
 			}
-			const ui64 hash = CityHash64(buffer, urlLen) & MASK;
+
+			if (hashes.size() == hashes.capacity())
+			{
+				fprintf(stderr, "Warning: too much hashes\n");						
+			}
+
+			const ui64 hash = CheckerHash(buffer, urlLen);
 			hashes.push_back(hash);
 			if (prevHash == hash)
 			{
@@ -59,6 +74,7 @@ int main()
 		std::sort(hashes.begin(), hashes.end());
 	}
 
+	if (false)
 	{
 		TTimer tStat("Stat");
 		size_t diffs8 = 0;
@@ -109,7 +125,7 @@ int main()
         printf("Collisions + Diffs16 ratio %%: %f\n", 100.f*static_cast<float>(collisions + diffs16)/hashes.size());
 		printf("Diffs8: %d\n", static_cast<int>(diffs8));
 		printf("Diffs16: %d\n", static_cast<int>(diffs16));
-		printf("Avg. diff: %f\n", static_cast<float>(MASK)/hashes.size());
+		printf("Avg. diff: %f\n", static_cast<float>(NHASHES)/hashes.size());
 		printf("Diffs: %d\n", static_cast<int>(hashes.size()));
 		printf("Size: %d\n", static_cast<int>(sizeEstimation/1024/1024));
 		printf("Size2: %d\n", static_cast<int>(sizeEstimation2/1024/1024));
@@ -118,7 +134,7 @@ int main()
 
 	{
 		TTimer tStat("Write");
-		FILE* fOut = fopen("bin", "wb");
+		FILE* fOut = fopen(hashOut, "wb");
 		
 		TBucket buckets[NBUCKETS + 1];
 		memset(buckets, 0, sizeof(buckets));

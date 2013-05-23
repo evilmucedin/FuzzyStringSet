@@ -31,7 +31,7 @@ public:
 			{
 				fprintf(stderr, "Warning: long URL\n");
 			}
-			while (*len && (m_Buffer[*len - 1] == '\n'))
+			while (*len && (m_Buffer[*len - 1] == '\n' || m_Buffer[*len - 1] == '\r'))
 			{
 				--(*len);
 			}
@@ -54,5 +54,53 @@ public:
 	~TLineReader()
 	{
 		fclose(m_FIn);
+	}
+};
+
+class TUrlReader
+{
+private:
+	TLineReader m_lineReader;
+
+public:
+	TUrlReader(const std::string& filename)
+		: m_lineReader(filename)
+	{
+
+	}
+
+	bool NextUrl(char** result, size_t* len)
+	{
+		if (m_lineReader.NextLine(result, len))
+		{
+			char* urlBegin = strchr(*result, '\t');
+			*len -= urlBegin - *result + 1;
+			*result = urlBegin + 1;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+};
+
+class TFileWriter
+{
+public:
+	FILE* m_file;
+
+	TFileWriter(const char* filename)
+	{
+		m_file = fopen(filename, "wb");
+		if (!m_file)
+		{
+			throw std::exception("cannot open file for write");
+		}
+	}
+
+	~TFileWriter()
+	{
+		fclose(m_file);
 	}
 };
