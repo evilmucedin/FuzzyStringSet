@@ -78,6 +78,7 @@ int main(int argc, char* argv[])
 	{
 		TTimer tStat("Stat");
 		size_t diffs8 = 0;
+		size_t diffs15 = 0;
 		size_t diffs16 = 0;
 		size_t collisions = 0;
 		size_t sizeEstimation = 0;
@@ -86,6 +87,10 @@ int main(int argc, char* argv[])
 		for (size_t i = 1; i < hashes.size(); ++i)
 		{
 			const ui64 diff = hashes[i] - hashes[i - 1];
+			if (diff >= (1 << 15))
+			{
+                ++diffs15;
+			}
 			if (diff >= (1 << 16))
 			{
                 ++diffs16;
@@ -124,6 +129,7 @@ int main(int argc, char* argv[])
 		printf("Collisions ratio %%: %f\n", 100.f*static_cast<float>(collisions)/hashes.size());
         printf("Collisions + Diffs16 ratio %%: %f\n", 100.f*static_cast<float>(collisions + diffs16)/hashes.size());
 		printf("Diffs8: %d\n", static_cast<int>(diffs8));
+		printf("Diffs15: %d\n", static_cast<int>(diffs15));
 		printf("Diffs16: %d\n", static_cast<int>(diffs16));
 		printf("Avg. diff: %f\n", static_cast<float>(NHASHES)/hashes.size());
 		printf("Diffs: %d\n", static_cast<int>(hashes.size()));
