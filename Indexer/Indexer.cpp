@@ -75,20 +75,22 @@ int main()
 
 	{
 		TTimer tStat("Stat");
-		size_t bigDiffs = 0;
-		size_t veryBigDiffs = 0;
+		size_t diffs8 = 0;
+		size_t diffs16 = 0;
 		size_t collisions = 0;
 		size_t sizeEstimation = 0;
+		size_t sizeEstimation2 = 0;
+		size_t sizeEstimation3 = 0;
 		for (size_t i = 1; i < hashes.size(); ++i)
 		{
 			const ui64 diff = hashes[i] - hashes[i - 1];
-			if (diff >= 32768)
+			if (diff >= (1 << 16))
 			{
-				++veryBigDiffs;
+                ++diffs16;
 			}
-			else if (diff >= 128)
+			else if (diff >= 256)
 			{
-				++bigDiffs;
+                ++diffs8;
 			}
 			else if (diff == 0)
 			{
@@ -103,15 +105,29 @@ int main()
 			{
 				sizeEstimation += 1;
 			}
+
+            if (diff >= 254)
+			{
+				sizeEstimation2 += 3;
+			}
+			else
+			{
+				sizeEstimation2 += 1;
+			}
+			
+            sizeEstimation3 += 2;
 		}
 
 		printf("Collisions: %d\n", static_cast<int>(collisions));
-		printf("Collisions ratio: %f\n", static_cast<float>(collisions)/hashes.size());
-		printf("Very big diffs: %d\n", static_cast<int>(veryBigDiffs));
-		printf("Big diffs: %d\n", static_cast<int>(bigDiffs));
+		printf("Collisions ratio %%: %f\n", 100.f*static_cast<float>(collisions)/hashes.size());
+        printf("Collisions + Diffs16 ratio %%: %f\n", 100.f*static_cast<float>(collisions + diffs16)/hashes.size());
+		printf("Diffs8: %d\n", static_cast<int>(diffs8));
+		printf("Diffs16: %d\n", static_cast<int>(diffs16));
 		printf("Avg. diff: %f\n", static_cast<float>(MASK)/hashes.size());
 		printf("Diffs: %d\n", static_cast<int>(hashes.size()));
 		printf("Size: %d\n", static_cast<int>(sizeEstimation/1024/1024));
+		printf("Size2: %d\n", static_cast<int>(sizeEstimation2/1024/1024));
+		printf("Size3: %d\n", static_cast<int>(sizeEstimation3/1024/1024));
 	}
 
 	return 0;
