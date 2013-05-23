@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <cstdlib>
 
 #include "..\Common\FileIO.h"
 #include "..\Common\Types.h"
@@ -52,7 +53,7 @@ public:
 	}
 };
 
-int main()
+void TestInput()
 {
 	TLineReader fInput("..\\surls");
 	char* buffer;
@@ -69,5 +70,37 @@ int main()
 		const ui64 hash = CityHash64(buffer, urlLen) & MASK;
 		printf("%d\n", static_cast<int>(hashChecker.Has(hash)));
 	}
+}
+
+void TestRandom()
+{
+	size_t countFP = 0;
+	THashCheker hashChecker(L"..\\Indexer\\_bin");
+	static const size_t NTESTS = 1000000;
+	for (size_t i = 0; i < NTESTS; ++i)
+	{
+		if ((i % 100000) == 0 && i)
+		{
+			printf("%d %d %f\n", i, countFP, static_cast<float>(countFP)*100.f/i);
+		}
+		size_t len = 5 + (rand() % 20);
+		char buffer[1024];
+		for (size_t i = 0; i < len; ++i)
+		{
+			buffer[i] = (rand() % 250) + 1;
+		}
+		const ui64 hash = CityHash64(buffer, len) & MASK;
+		if (hashChecker.Has(hash))
+		{
+			++countFP;
+		}
+	}
+	printf("%d %f\n", countFP, static_cast<float>(countFP)*100.f/NTESTS);
+}
+
+int main()
+{
+	TestRandom();
+	TestInput();
 	return 0;
 }
