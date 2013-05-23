@@ -123,7 +123,7 @@ int main()
 		TBucket buckets[NBUCKETS + 1];
 		memset(buckets, 0, sizeof(buckets));
 		fwrite(buckets, sizeof(TBucket), NBUCKETS + 1, fOut);
-		ui32 offset = sizeof(TBucket)*(NBUCKETS + 1);
+		ui32 offset = 0;
 
 		size_t iHash = 0;
 		size_t minLen = 1000000;
@@ -136,8 +136,8 @@ int main()
 			}
 			buckets[i].m_Offset = offset;
 
-			const ui64 bucketBegin = (NHASHES / NBUCKETS) * i;
-			ui64 bucketEnd = (NHASHES / NBUCKETS) * (i + 1);
+			const ui64 bucketBegin = (i*NHASHES) / NBUCKETS;
+			const ui64 bucketEnd = ((i + 1)*NHASHES) / NBUCKETS;
 			ui64 prev = bucketBegin;
 			size_t len = 0;
 			while ( (iHash < hashes.size()) && (hashes[iHash] < bucketEnd) )
@@ -145,11 +145,11 @@ int main()
 				ui32 diff = hashes[iHash] - prev;
 				while (diff > 0)
 				{
-					ui32 toWrite = std::min(static_cast<ui32>(diff), static_cast<ui32>((1 << 16) - 1));
-					ui16 toWrite16 = static_cast<ui16>(toWrite);
+					const ui32 toWrite = std::min(static_cast<ui32>(diff), static_cast<ui32>((1 << 16) - 1));
+					const ui16 toWrite16 = static_cast<ui16>(toWrite);
 					fwrite(&toWrite16, 2, 1, fOut);
 					diff -= toWrite;
-					offset += 2;
+					++offset;
 					++len;
 				}
 				prev = hashes[iHash];
@@ -159,13 +159,14 @@ int main()
 			maxLen = max(maxLen, len);
 		}
 		buckets[NBUCKETS].m_Offset = offset;
-		printf("minLen = %d\n", minLen);
-		printf("maxLen = %d\n", maxLen);
 
 		fseek(fOut, 0, SEEK_SET);
 		fwrite(buckets, sizeof(TBucket), NBUCKETS + 1, fOut);
 
 		fclose(fOut);
+
+		printf("minLen = %d\n", minLen);
+		printf("maxLen = %d\n", maxLen);
 	}
 
 	return 0;

@@ -3,6 +3,7 @@
 #include <cstdio>
 
 #include <string>
+#include <exception>
 
 class TLineReader
 {
@@ -15,6 +16,10 @@ public:
 	TLineReader(const std::string& filename)
 	{
 		m_FIn = fopen(filename.c_str(), "rb");
+		if (!m_FIn)
+		{
+			throw std::exception("cannot open file");
+		}
 	}
 
 	bool NextLine(char** result, size_t* len)
