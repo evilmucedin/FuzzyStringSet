@@ -12,7 +12,7 @@ struct TBucket
 	ui32 m_Offset;
 };
 
-static const size_t NBUCKETS = 32768;
+static const size_t NBUCKETS = 1 << 16;
 
 inline ui64 CheckerHash(const char* buffer, size_t len)
 {

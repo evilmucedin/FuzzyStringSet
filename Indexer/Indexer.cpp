@@ -21,6 +21,12 @@ static const size_t N = 110000000;
 
 int main(int argc, char* argv[])
 {
+	if (argc < 3)
+	{
+		fprintf(stderr, "bad arguments\n");
+		return 1;
+	}
+
 	const char* urlsIn = argv[1];
 	const char* hashOut = argv[2];
 	

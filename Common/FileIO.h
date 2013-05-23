@@ -12,6 +12,30 @@ private:
 	static const size_t BUFFER_LEN = 65536;
 	char m_Buffer[BUFFER_LEN];
 
+	static char* FGetS(char* string, FILE* fIn, size_t* len)
+	{
+		char* pointer = string;
+		char ch;
+
+		while ((ch = _fgetc_nolock(fIn)) != EOF)
+		{
+			if ((*pointer++ = ch) == '\n')
+			{
+				break;
+			}
+		}
+				
+		*len = pointer - string;
+		if (*len != 0) 
+		{
+			return string;
+		}
+		else
+		{
+			return 0;
+		}
+	}
+
 public:
 	TLineReader(const std::string& filename)
 	{
@@ -20,13 +44,13 @@ public:
 		{
 			throw std::exception("cannot open file");
 		}
+		setvbuf(m_FIn, 0, _IOFBF, 16*1024);
 	}
 
 	bool NextLine(char** result, size_t* len)
 	{
-		if (fgets(m_Buffer, BUFFER_LEN, m_FIn))
+		if (FGetS(m_Buffer, m_FIn, len))
 		{
-			*len = strlen(m_Buffer);
 			if (*len > BUFFER_LEN - 100)
 			{
 				fprintf(stderr, "Warning: long URL\n");

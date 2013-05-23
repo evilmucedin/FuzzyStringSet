@@ -93,7 +93,7 @@ static void TestInput()
 static void TestRandom()
 {
 	size_t countFP = 0;
-	THashChecker hashChecker("..\\Indexer\\_bin");
+	THashChecker hashChecker("c:\\Users\\denisra\\Programming\\FuzzyStringSet\\url_compressed.bin");
 	static const size_t NTESTS = 1000000;
 	clock_t begin = clock();
 	size_t iLine = 0;
@@ -123,8 +123,15 @@ int main(int argc, char* argv[])
 {
 	// TestInput();
 	// TestRandom();
+	// return 0;
 	
 	TTimer tCheck("check");
+
+	if (argc < 4)
+	{
+		fprintf(stderr, "bad arguments\n");
+		return 1;
+	}
 
 	const char* binIn = argv[1];
 	const char* urlsIn = argv[2];
