@@ -9,6 +9,7 @@
 #include "..\Common\Timer.h"
 #include "..\Common\SetParameters.h"
 #include "..\Common\SuperFastHash.h"
+#include "..\Common\FileIO.h"
 
 using namespace std;
 
@@ -26,12 +27,12 @@ int main()
 	hashes.reserve(N);
 	{
 		TTimer tRead("Read");
-		FILE* fIn = fopen("..\\surls", "r");
-		static const size_t BUFFER_LEN = 65536;
-		char buffer[BUFFER_LEN];
+		TLineReader fIn("..\\surls");
 		int iLine = 0;
 		ui64 prevHash = 0;
-		while (fgets(buffer, BUFFER_LEN, fIn))
+		char* buffer;
+		size_t urlLen;
+		while (fIn.NextLine(&buffer, &urlLen))
 		{
 			if (TEST_MODE && (iLine >= 1000000))
 			{
@@ -42,28 +43,13 @@ int main()
 			{
 				printf("%d\n", iLine);
 			}
-			size_t urlLen = strlen(buffer);
-			if (urlLen > 32000)
+			const ui64 hash = CityHash64(buffer, urlLen) & MASK;
+			hashes.push_back(hash);
+			if (prevHash == hash)
 			{
-				fprintf(stderr, "Warning: long URL\n");
+				fprintf(stderr, "Warning: same URL '%llu' '%llu' '%s'\n", prevHash, hash, buffer);			
 			}
-			if (urlLen)
-			{
-				while (urlLen && (buffer[urlLen - 1] == '\n'))
-				{
-					--urlLen;
-				}
-				if (urlLen)
-				{
-					const ui64 hash = CityHash64(buffer, urlLen) & MASK;
-					hashes.push_back(hash);
-					if (prevHash == hash)
-					{
-						fprintf(stderr, "Warning: same URL '%llu' '%llu' '%s'\n", prevHash, hash, buffer);			
-					}
-					prevHash = hash;
-				}
-			}
+			prevHash = hash;
 		}
 		printf("%d lines handled\n", iLine);
 	}
@@ -134,6 +120,59 @@ int main()
 		printf("Size: %d\n", static_cast<int>(sizeEstimation/1024/1024));
 		printf("Size2: %d\n", static_cast<int>(sizeEstimation2/1024/1024));
 		printf("Size3: %d\n", static_cast<int>(sizeEstimation3/1024/1024));
+	}
+
+	{
+		TTimer tStat("Write");
+		FILE* fOut = fopen("bin", "wb");
+		
+		TBucket buckets[NBUCKETS + 1];
+		memset(buckets, 0, sizeof(buckets));
+		fwrite(buckets, sizeof(TBucket), NBUCKETS + 1, fOut);
+		ui32 offset = 0;
+
+		size_t iHash = 0;
+		size_t minLen = 1000000;
+		size_t maxLen = 0;
+		for (ui64 i = 0; i < NBUCKETS; ++i)
+		{
+			if (0 == (i % 100))
+			{
+				printf("%d\n", i);
+			}
+			buckets[i].m_Offset = offset;
+
+			const ui64 bucketBegin = (i*NHASHES) / NBUCKETS;
+			const ui64 bucketEnd = ((i + 1)*NHASHES) / NBUCKETS;
+			ui64 prev = bucketBegin;
+			size_t len = 0;
+			while ( (iHash < hashes.size()) && (hashes[iHash] < bucketEnd) )
+			{
+				ui32 diff = hashes[iHash] - prev;
+				while (diff > 0)
+				{
+					const ui32 toWrite = std::min(static_cast<ui32>(diff), static_cast<ui32>((1 << 16) - 1));
+					const ui16 toWrite16 = static_cast<ui16>(toWrite);
+					fwrite(&toWrite16, 2, 1, fOut);
+					diff -= toWrite;
+					++offset;
+					++len;
+				}
+				prev = hashes[iHash];
+				++iHash;
+			}
+			minLen = min(minLen, len);
+			maxLen = max(maxLen, len);
+		}
+		buckets[NBUCKETS].m_Offset = offset;
+
+		fseek(fOut, 0, SEEK_SET);
+		fwrite(buckets, sizeof(TBucket), NBUCKETS + 1, fOut);
+
+		fclose(fOut);
+
+		printf("minLen = %d\n", minLen);
+		printf("maxLen = %d\n", maxLen);
 	}
 
 	return 0;
