@@ -17,7 +17,8 @@ private:
 	ui32 m_Size;
 	LPVOID m_View;
 	const TBucket* m_Buckets;
-	const ui16* m_Data;
+	SYSTEM_INFO m_SI;
+	char* m_buffer;
 
 public:
 	THashChecker(const std::string& filename)
@@ -33,33 +34,66 @@ public:
 		{
 			throw std::exception("Bad CreateFileMapping");
 		}
-		m_View = MapViewOfFile(m_Map, FILE_MAP_READ, 0, 0, m_Size);
+		m_View = MapViewOfFile(m_Map, FILE_MAP_READ, 0, 0, (NBUCKETS + 1)*sizeof(TBucket));
 		if (!m_View)
 		{
 			throw std::exception("Bad MapViewOfFile");
 		}
 		m_Buckets = static_cast<const TBucket*>(m_View);
-		m_Data = reinterpret_cast<const ui16*>(m_Buckets + NBUCKETS + 1);
+		GetSystemInfo(&m_SI);
+		m_buffer = new char[1 << 20];
 	}
 		
 	bool Has(ui64 hash) throw()
 	{
-		const size_t iBucket = (hash*NBUCKETS)/NHASHES;
-		const size_t stop = m_Buckets[iBucket + 1].m_Offset;
+		const size_t iBucket = static_cast<size_t>((hash*NBUCKETS)/NHASHES);
+		
+		const size_t offset = (NBUCKETS + 1)*sizeof(TBucket) + m_Buckets[iBucket].m_Offset*sizeof(ui16);
+		const size_t iPage = offset / m_SI.dwAllocationGranularity;
+		const size_t shift = offset % m_SI.dwAllocationGranularity;
+		const size_t blockSize = m_Buckets[iBucket + 1].m_Offset - m_Buckets[iBucket].m_Offset;
+
+		const size_t address = iPage*m_SI.dwAllocationGranularity;
+		
+		/*
+		LARGE_INTEGER liOffset;
+		memset(&liOffset, 0, sizeof(liOffset));
+		liOffset.LowPart = offset;
+		if (!SetFilePointerEx(m_File, liOffset, 0, FILE_BEGIN))
+		{
+			throw std::exception("Bad SetFilePointer");			
+		}
+		if (!ReadFile(m_File, m_buffer, blockSize*sizeof(ui16), 0, 0))
+		{
+			throw std::exception("Bad ReadFile");			
+		}
+		const ui16* data = reinterpret_cast<ui16*>(m_buffer);
+		*/
+		const void* view = MapViewOfFile(m_Map, FILE_MAP_READ, 0, address, shift + blockSize*sizeof(ui16));
+		if (!view)
+		{
+			throw std::exception("Bad MapViewOfFile");
+		}
+		const ui16* data = reinterpret_cast<const ui16*>((const char*)view + shift);
+
+		const ui16* stop = data + blockSize*sizeof(ui16);
 		const ui64 hashStart = (iBucket*NHASHES)/NBUCKETS;
 		ui64 now = hashStart;
-		size_t i = m_Buckets[iBucket].m_Offset;
 		do 
 		{
-			now += m_Data[i];
-			++i;
+			now += *data;
+			++data;
 		}
-		while ( (i < stop) && (now < hash) );
+		while ( (data < stop) && (now < hash) );
+
+		UnmapViewOfFile(view);
+
 		return now == hash;
 	}
 	
 	~THashChecker()
 	{
+		delete[] m_buffer;
 		UnmapViewOfFile(m_View);
 		CloseHandle(m_Map);
 		CloseHandle(m_File);
