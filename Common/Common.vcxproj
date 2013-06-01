@@ -77,8 +77,15 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_CRT_DISABLE_PERFCRIT_LOCKS;WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
+      <SDLCheck>false</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <ExceptionHandling>false</ExceptionHandling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <FloatingPointExceptions>false</FloatingPointExceptions>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <AdditionalOptions>/gs- /sdl- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -109,16 +116,13 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CityHash.h" />
-    <ClInclude Include="CityHashConfig.h" />
     <ClInclude Include="FileIO.h" />
     <ClInclude Include="SetParameters.h" />
-    <ClInclude Include="SuperFastHash.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Types.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CityHash.cpp" />
+    <ClCompile Include="FileIO.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

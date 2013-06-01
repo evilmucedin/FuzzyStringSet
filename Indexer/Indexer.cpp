@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
 		TUrlReader fIn(urlsIn);
 		int iLine = 0;
 		ui64 prevHash = 0;
-		char* buffer;
+		const char* buffer;
 		size_t urlLen;
 		while (fIn.NextUrl(&buffer, &urlLen))
 		{
@@ -156,6 +156,8 @@ int main(int argc, char* argv[])
 		size_t iHash = 0;
 		size_t minLen = 1000000;
 		size_t maxLen = 0;
+		size_t overflows = 0;
+		size_t collisions = 0;
 		for (ui64 i = 0; i < NBUCKETS; ++i)
 		{
 			if (0 == (i % 100))
@@ -170,15 +172,36 @@ int main(int argc, char* argv[])
 			size_t len = 0;
 			while ( (iHash < hashes.size()) && (hashes[iHash] < bucketEnd) )
 			{
-				ui32 diff = hashes[iHash] - prev;
-				while (diff > 0)
+				ui64 diff = hashes[iHash] - prev;
+				if (diff >= (1 << 16))
 				{
-					const ui32 toWrite = std::min(static_cast<ui32>(diff), static_cast<ui32>((1 << 16) - 1));
-					const ui16 toWrite16 = static_cast<ui16>(toWrite);
-					fwrite(&toWrite16, 2, 1, fOut);
-					diff -= toWrite;
-					++offset;
-					++len;
+					++overflows;
+				}
+				if (!diff)
+				{
+					if (hashes[iHash] == bucketBegin)
+					{
+						const ui16 toWrite16 = 0;
+						fwrite(&toWrite16, 2, 1, fOut);
+						++offset;
+						++len;
+					}
+					else
+					{
+						++collisions;
+					}
+				}
+				else
+				{
+					while (diff > 0)
+					{
+						const ui64 toWrite = min(diff, static_cast<ui64>((1 << 16) - 1));
+						const ui16 toWrite16 = static_cast<ui16>(toWrite);
+						fwrite(&toWrite16, 2, 1, fOut);
+						diff -= toWrite;
+						++offset;
+						++len;
+					}
 				}
 				prev = hashes[iHash];
 				++iHash;
@@ -193,8 +216,12 @@ int main(int argc, char* argv[])
 
 		fclose(fOut);
 
+		printf("processed = %d %d\n", iHash, hashes.size());
 		printf("minLen = %d\n", minLen);
 		printf("maxLen = %d\n", maxLen);
+		printf("overflows = %d\n", overflows);
+		printf("collisions = %d\n", collisions);
+		printf("avg = %d\n", NHASHES/hashes.size());
 	}
 
 	return 0;

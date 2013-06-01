@@ -18,16 +18,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SuperFastHash.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Types.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CityHash.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CityHashConfig.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Timer.h">
@@ -41,7 +32,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CityHash.cpp">
+    <ClCompile Include="FileIO.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
